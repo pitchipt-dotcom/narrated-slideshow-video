@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "updated_at": null,
+  "entries": [
+    { "source": "非麻痺側", "reading": "ひまひそく" },
+    { "source": "麻痺側", "reading": "まひそく" },
+    { "source": "片麻痺", "reading": "かたまひ" },
+    { "source": "抜重", "reading": "ばつじゅう" },
+    { "source": "高次脳機能障害", "reading": "こうじのうきのう障害" },
+    { "source": "立脚側", "reading": "りっきゃくそく" },
+    { "source": "前足部", "reading": "ぜんそくぶ" },
+    { "source": "足底", "reading": "そくてい" },
+    { "source": "側屈", "reading": "そっくつ" }
+  ]
+}

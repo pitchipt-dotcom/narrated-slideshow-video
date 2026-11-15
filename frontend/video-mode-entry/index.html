@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#5b4be8">
+    <title>動画生成</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="/icons/icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell app-shell">
+      <header class="app-header">
+        <h1>動画生成</h1>
+        <p>画像を選んで、台本を貼って、作るだけ。</p>
+      </header>
+
+      <form id="manual-video-form" novalidate>
+        <section class="step-card" aria-labelledby="step-images-title">
+          <h2 id="step-images-title"><span class="step-number" aria-hidden="true">1</span>画像を選ぶ</h2>
+          <label class="file-button">
+            <span>＋ 写真を追加</span>
+            <input id="manual-images" name="images" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          </label>
+          <p id="upload-summary" class="step-hint" role="status" aria-live="polite">JPEG・PNG・WebP。ライブラリと合わせて20枚まで。</p>
+
+          <div class="library-picker">
+            <div id="library-message" class="library-message" role="status" aria-live="polite"></div>
+            <div id="library-image-grid" class="library-grid" aria-live="polite"></div>
+            <button id="load-more-library-images" class="secondary-action compact-action" type="button" hidden>続きを表示</button>
+          </div>
+          <p id="selection-summary" class="selection-summary" role="status" aria-live="polite">まだ選んでいません</p>
+        </section>
+
+        <section class="step-card" aria-labelledby="step-script-title">
+          <h2 id="step-script-title"><span class="step-number" aria-hidden="true">2</span>台本を貼る</h2>
+          <label class="field">
+            <span class="visually-hidden">台本</span>
+            <textarea id="manual-subtitle-text" name="subtitle_text" rows="7" maxlength="20000" placeholder="ここに台本を貼り付け。字幕として表示され、そのまま読み上げられます。" required></textarea>
+          </label>
+
+          <details class="fold">
+            <summary>読み方を別に指定する</summary>
+            <label class="field">
+              <span>読み上げ用台本</span>
+              <small>空のままなら、上の台本をそのまま読み上げます。読み間違える箇所をひらがな・カタカナにした台本を入れます。</small>
+              <textarea id="manual-speech-text" name="speech_text" rows="7" maxlength="20000" placeholder="音声生成に使う読み文章"></textarea>
+            </label>
+            <div id="script-structure-status" class="form-message script-structure-status" role="status" aria-live="polite" hidden></div>
+            <div class="input-guidance">
+              <ul>
+                <li>字幕台本と読み上げ台本は、同じ数のセグメントに分けます。</li>
+                <li>空行、<code>---</code>、段落区切りは両方の同じ位置に入れます。</li>
+                <li>読み方だけを変える場合も、文や段落の対応関係は崩さないでください。</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="fold">
+            <summary>タイトル・読み辞書</summary>
+            <label class="field">
+              <span>動画タイトル <small>（未入力時はデフォルト名）</small></span>
+              <input id="manual-title" name="title" type="text" maxlength="200" autocomplete="off" placeholder="例：折りたたみスマートフォン紹介">
+            </label>
+            <div class="pronunciation-dictionary">
+              <strong>音声の読み辞書</strong>
+              <p>ここでの変換はIrodoriへ送る音声だけに適用されます。字幕の漢字表記は変わりません。</p>
+              <div class="dictionary-toolbar">
+                <button id="load-pronunciation-dictionary" class="compact-action" type="button">辞書を読み込む</button>
+                <button id="add-pronunciation-entry" class="compact-action" type="button">語句を追加</button>
+              </div>
+              <div id="pronunciation-dictionary-message" class="library-message" role="status" aria-live="polite"></div>
+              <div id="pronunciation-dictionary-entries" class="dictionary-entries"></div>
+              <button id="save-pronunciation-dictionary" class="primary-action primary-action--button" type="button">読み辞書を保存</button>
+              <label class="field dictionary-test">
+                <span>変換テスト</span>
+                <textarea id="pronunciation-test-input" rows="3" maxlength="5000" placeholder="例：東京都の市場へ行きます。"></textarea>
+              </label>
+              <button id="test-pronunciation-dictionary" class="secondary-action compact-action" type="button">現在保存中の辞書で変換</button>
+              <output id="pronunciation-test-output" class="dictionary-test-output" aria-live="polite"></output>
+            </div>
+          </details>
+        </section>
+
+        <section class="step-card step-card--submit" aria-labelledby="step-make-title">
+          <h2 id="step-make-title" class="visually-hidden">作る</h2>
+          <div id="manual-form-errors" class="form-message form-message--error" role="alert" tabindex="-1" hidden></div>
+          <div id="manual-form-status" class="form-message form-message--success" role="status" aria-live="polite" tabindex="-1" hidden></div>
+          <button class="primary-action primary-action--button make-button" type="submit"><span class="step-number step-number--light" aria-hidden="true">3</span>動画を作る</button>
+        </section>
+      </form>
+
+      <section id="current-job" class="step-card current-job" aria-labelledby="current-job-title" hidden>
+        <h2 id="current-job-title">いま作っている動画</h2>
+        <p id="current-job-name" class="current-job-name"></p>
+        <ol id="current-job-steps" class="progress-steps" aria-hidden="true">
+          <li>待機</li>
+          <li>音声</li>
+          <li>字幕・動画</li>
+          <li>完成</li>
+        </ol>
+        <p id="current-job-label" class="current-job-label" role="status" aria-live="polite"></p>
+        <p id="current-job-detail" class="current-job-detail"></p>
+        <p id="current-job-error" class="job-error" hidden></p>
+        <video id="current-job-video" class="current-job-video" controls playsinline preload="metadata" hidden></video>
+        <div class="current-job-actions">
+          <a id="current-job-save" class="primary-action" href="#" hidden>保存</a>
+          <button id="current-job-new" class="secondary-action" type="button" hidden>もう1本作る</button>
+          <button id="current-job-cancel" class="cancel-job-action" type="button" hidden>取消</button>
+        </div>
+        <details class="fold">
+          <summary>画像ごとの秒数・順番</summary>
+          <section id="image-settings-editor" class="image-settings-editor" aria-labelledby="image-settings-title" hidden>
+            <h3 id="image-settings-title" class="visually-hidden">登録後の画像順・詳細設定</h3>
+            <p>上下ボタンで順序を変更できます。表示時間は全画像に指定するか、すべて空にします。segment指定は台本分割後に全segmentを重複なく割り当てます。</p>
+            <div id="image-settings-message" class="library-message" role="status" aria-live="polite"></div>
+            <ol id="image-settings-list"></ol>
+            <button id="save-image-settings" class="primary-action primary-action--button" type="button">画像設定を保存</button>
+          </section>
+        </details>
+      </section>
+
+      <details id="history-details" class="fold fold--page">
+        <summary>これまでの動画</summary>
+        <section class="manual-history" aria-label="これまでの動画">
+          <button id="load-manual-jobs" class="compact-action" type="button">更新</button>
+          <div id="manual-jobs-message" class="library-message" role="status" aria-live="polite"></div>
+          <div id="manual-jobs-list" class="manual-jobs-list"></div>
+          <button id="load-more-manual-jobs" class="secondary-action compact-action" type="button" hidden>古い履歴を表示</button>
+        </section>
+      </details>
+
+      <details id="more-details" class="fold fold--page">
+        <summary>その他</summary>
+        <div class="portal-actions">
+          <a class="portal-link portal-link--admin" href="/image-library-admin">画像ライブラリを評価</a>
+        </div>
+        <div id="portal-status" class="service-grid" role="status" aria-live="polite"></div>
+      </details>
+    </main>
+  </body>
+</html>

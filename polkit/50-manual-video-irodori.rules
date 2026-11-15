@@ -1,0 +1,15 @@
+// Lets the manual-video worker (user YOUR_USER) start and stop exactly one
+// system unit, irodori-tts.service, without sudo. Nothing else is granted:
+// other units, and other verbs (restart, reload, enable, kill ...) on this
+// unit, still require administrator authentication.
+//
+// Replace YOUR_USER with the account the worker runs as, then install as
+// /etc/polkit-1/rules.d/50-manual-video-irodori.rules (root:root 0644).
+polkit.addRule(function (action, subject) {
+    if (action.id !== "org.freedesktop.systemd1.manage-units") return polkit.Result.NOT_HANDLED;
+    if (subject.user !== "YOUR_USER") return polkit.Result.NOT_HANDLED;
+    if (action.lookup("unit") !== "irodori-tts.service") return polkit.Result.NOT_HANDLED;
+    var verb = action.lookup("verb");
+    if (verb === "start" || verb === "stop") return polkit.Result.YES;
+    return polkit.Result.NOT_HANDLED;
+});

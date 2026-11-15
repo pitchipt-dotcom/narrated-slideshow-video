@@ -1,0 +1,16 @@
+{
+  "name": "narrated-slideshow-video",
+  "version": "0.1.0",
+  "description": "Turn still images and a script into a narrated slideshow video with burned-in subtitles (home-lab reference implementation).",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "api": "node backend/manual-job-server.js",
+    "worker": "node backend/manual-job-worker.js",
+    "test": "node tests/run-all.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

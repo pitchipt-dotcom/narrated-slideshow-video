@@ -1,0 +1,116 @@
+{
+  "version": 2,
+  "mode": "manual",
+  "job_id": "job_20260714T143500_manual001",
+  "status": "queued",
+  "current_stage": "queued",
+  "created_at": "2026-07-14T14:35:00+09:00",
+  "updated_at": "2026-07-14T14:35:00+09:00",
+  "input": {
+    "title": "折りたたみスマートフォン紹介",
+    "subtitle_text": "Galaxy Z Fold7は、大画面を活かせる端末です。\n持ち運びやすさも特徴です。",
+    "speech_text": "ぎゃらくしー ぜっと ふぉーるど せぶんは、だいがめんをいかせるたんまつです。\nもちはこびやすさも、とくちょうです。",
+    "request_note": "手動モードのデータ構造確認用"
+  },
+  "segments": [
+    {
+      "id": "seg_001",
+      "order": 1,
+      "subtitle_text": "Galaxy Z Fold7は、大画面を活かせる端末です。",
+      "speech_text": "ぎゃらくしー ぜっと ふぉーるど せぶんは、だいがめんをいかせるたんまつです。",
+      "image_id": "image_001",
+      "requested_image_duration_seconds": null,
+      "audio": {
+        "status": "pending",
+        "path": null,
+        "duration_seconds": null,
+        "error": null
+      },
+      "timing": {
+        "start_seconds": null,
+        "end_seconds": null
+      }
+    },
+    {
+      "id": "seg_002",
+      "order": 2,
+      "subtitle_text": "持ち運びやすさも特徴です。",
+      "speech_text": "もちはこびやすさも、とくちょうです。",
+      "image_id": "image_002",
+      "requested_image_duration_seconds": 4.5,
+      "audio": {
+        "status": "pending",
+        "path": null,
+        "duration_seconds": null,
+        "error": null
+      },
+      "timing": {
+        "start_seconds": null,
+        "end_seconds": null
+      }
+    }
+  ],
+  "images": [
+    {
+      "id": "image_001",
+      "source": "upload",
+      "order": 1,
+      "segment_ids": [
+        "seg_001"
+      ],
+      "requested_duration_seconds": null,
+      "original_filename": "fold-front.png",
+      "stored_filename": null,
+      "stored_path": null,
+      "sha256": null,
+      "start_seconds": null,
+      "end_seconds": null,
+      "duration_seconds": null,
+      "library_asset_id": null
+    },
+    {
+      "id": "image_002",
+      "source": "library",
+      "order": 2,
+      "segment_ids": [
+        "seg_002"
+      ],
+      "requested_duration_seconds": 4.5,
+      "original_filename": "fold-portable.jpg",
+      "stored_filename": null,
+      "stored_path": null,
+      "sha256": null,
+      "start_seconds": null,
+      "end_seconds": null,
+      "duration_seconds": null,
+      "library_asset_id": null
+    }
+  ],
+  "output": {
+    "filename": "fold7-introduction.mp4",
+    "aspect_ratio": "3:2",
+    "subtitle_size": 42,
+    "subtitle_position": "bottom"
+  },
+  "artifacts": {
+    "audio_file": null,
+    "subtitle_file": null,
+    "video_file": null
+  },
+  "voice_profile": "calm_female_06",
+  "attempts": 0,
+  "history": [
+    {
+      "at": "2026-07-14T14:35:00+09:00",
+      "stage": "queued",
+      "message": "手動ジョブデータ構造の例を作成"
+    }
+  ],
+  "review": {
+    "required": false,
+    "reasons": []
+  },
+  "error": null,
+  "regeneration": null,
+  "archive": null
+}

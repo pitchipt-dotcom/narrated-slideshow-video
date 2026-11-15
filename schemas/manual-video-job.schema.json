@@ -1,0 +1,711 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/video-project/schemas/manual-video-job-v2.schema.json",
+  "title": "Manual video job version 2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "mode",
+    "job_id",
+    "status",
+    "current_stage",
+    "created_at",
+    "updated_at",
+    "input",
+    "segments",
+    "images",
+    "output",
+    "artifacts",
+    "voice_profile",
+    "attempts",
+    "history",
+    "review",
+    "error"
+  ],
+  "properties": {
+    "version": {
+      "const": 2
+    },
+    "mode": {
+      "const": "manual"
+    },
+    "job_id": {
+      "type": "string",
+      "pattern": "^job_[A-Za-z0-9_-]{1,120}$"
+    },
+    "status": {
+      "$ref": "#/$defs/jobStatus"
+    },
+    "current_stage": {
+      "$ref": "#/$defs/jobStatus"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "input": {
+      "$ref": "#/$defs/input"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/segment"
+      }
+    },
+    "audio_blocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/audioBlock" }
+    },
+    "images": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/image"
+      }
+    },
+    "output": {
+      "$ref": "#/$defs/outputOptions"
+    },
+    "artifacts": {
+      "$ref": "#/$defs/artifacts"
+    },
+    "voice_profile": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "voice_generation": {
+      "$ref": "#/$defs/voiceGeneration"
+    },
+    "audio_quality": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/audioQuality" }
+      ]
+    },
+    "attempts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "history": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/historyItem"
+      }
+    },
+    "review": {
+      "$ref": "#/$defs/review"
+    },
+    "error": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/error"
+        }
+      ]
+    },
+    "regeneration": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source_job_id", "requested_at", "reused_segment_audio", "reused_assembled_audio", "reused_subtitle", "reused_images"],
+          "properties": {
+            "source_job_id": { "type": "string", "pattern": "^job_[A-Za-z0-9_-]{1,120}$" },
+            "requested_at": { "type": "string", "format": "date-time" },
+            "kind": { "enum": ["full_material_reuse", "anomalous_audio_segments", "anomalous_audio_blocks"] },
+            "segment_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^seg_[0-9]{3,}$" } },
+            "audio_block_ids": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^block_[0-9]{3,}$" } },
+            "audio_quality_regeneration_count": { "type": "integer", "minimum": 0 },
+            "reused_segment_audio": { "type": "boolean" },
+            "reused_assembled_audio": { "type": "boolean" },
+            "reused_subtitle": { "type": "boolean" },
+            "reused_images": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "archive": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "saved_at", "local_archive_path", "nas_archive_path", "error"],
+          "properties": {
+            "status": { "enum": ["local_only", "nas_saved"] },
+            "saved_at": { "type": "string", "format": "date-time" },
+            "local_archive_path": { "type": "string", "minLength": 1, "maxLength": 1024 },
+            "nas_archive_path": { "$ref": "#/$defs/nullablePath" },
+            "error": { "type": ["string", "null"], "maxLength": 1000 }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "audioQuality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "status", "checked_at", "f0_is_diagnostic_alone", "baselines", "anomalies", "regeneration_count", "max_regenerations"],
+      "anyOf": [
+        { "required": ["segments"] },
+        { "required": ["audio_blocks"] }
+      ],
+      "properties": {
+        "version": { "enum": [1, 2] },
+        "unit": { "enum": ["segment", "audio_block"] },
+        "status": { "enum": ["passed", "attention"] },
+        "checked_at": { "type": "string", "format": "date-time" },
+        "f0_is_diagnostic_alone": { "const": false },
+        "baselines": { "type": "object" },
+        "segments": { "type": "array", "items": { "type": "object" } },
+        "audio_blocks": { "type": "array", "items": { "type": "object" } },
+        "anomalies": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["reasons", "metrics"],
+            "anyOf": [
+              { "required": ["segment_id"] },
+              { "required": ["audio_block_id"] }
+            ],
+            "properties": {
+              "segment_id": { "type": "string", "pattern": "^seg_[0-9]{3,}$" },
+              "audio_block_id": { "type": "string", "pattern": "^block_[0-9]{3,}$" },
+              "segment_ids": { "type": "array", "items": { "type": "string", "pattern": "^seg_[0-9]{3,}$" } },
+              "reasons": { "type": "array", "items": { "type": "string" } },
+              "metrics": { "type": "object" }
+            }
+          }
+        },
+        "regeneration_count": { "type": "integer", "minimum": 0 },
+        "max_regenerations": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "audioBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "audio_block_index", "subtitle_segment_indexes", "segment_ids", "text", "readable_characters", "sentence_count", "audio_path", "status", "duration_seconds", "seed", "started_at", "completed_at", "error", "retry_count"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^block_[0-9]{3,}$" },
+        "audio_block_index": { "type": "integer", "minimum": 0 },
+        "subtitle_segment_indexes": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
+        "segment_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^seg_[0-9]{3,}$" } },
+        "text": { "type": "string", "minLength": 1 },
+        "readable_characters": { "type": "integer", "minimum": 0 },
+        "sentence_count": { "type": "integer", "minimum": 1 },
+        "audio_path": { "$ref": "#/$defs/nullablePath" },
+        "status": { "enum": ["pending", "generating", "completed", "failed", "quality_failed"] },
+        "duration_seconds": { "$ref": "#/$defs/nullableSeconds" },
+        "seed": { "oneOf": [{ "type": "null" }, { "type": "integer", "minimum": 1, "maximum": 2147483647 }] },
+        "started_at": { "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }] },
+        "completed_at": { "oneOf": [{ "type": "null" }, { "type": "string", "format": "date-time" }] },
+        "error": { "type": ["string", "null"], "maxLength": 1000 },
+        "retry_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "voiceGeneration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "seed", "profile", "conditioning_mode", "reference_audio_used", "profile_fingerprint", "profile_snapshot"],
+      "properties": {
+        "version": { "const": 1 },
+        "seed": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "profile": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "conditioning_mode": { "type": ["string", "null"], "enum": [null, "caption_only", "caption_and_reference"] },
+        "reference_audio_used": { "type": "boolean" },
+        "profile_fingerprint": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          ]
+        },
+        "profile_snapshot": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["model", "caption", "reference_audio", "steps", "tempo", "duration_scale", "t_schedule_mode", "sway_coeff", "cfg_guidance_mode", "cfg_scale_text", "cfg_scale_caption", "cfg_scale_speaker", "cfg_scale", "cfg_min_t", "cfg_max_t", "context_kv_cache"],
+              "properties": {
+                "model": { "type": "string", "minLength": 1 },
+                "caption": { "type": "string", "minLength": 1 },
+                "reference_audio": { "type": "null" },
+                "steps": { "type": "integer", "minimum": 1 },
+                "tempo": { "type": "number", "exclusiveMinimum": 0 },
+                "duration_scale": { "type": "number", "exclusiveMinimum": 0 },
+                "t_schedule_mode": { "type": "string", "minLength": 1 },
+                "sway_coeff": { "type": "number" },
+                "cfg_guidance_mode": { "type": "string", "minLength": 1 },
+                "cfg_scale_text": { "type": "number" },
+                "cfg_scale_caption": { "type": "number" },
+                "cfg_scale_speaker": { "type": "number" },
+                "cfg_scale": { "type": ["number", "null"] },
+                "cfg_min_t": { "type": "number" },
+                "cfg_max_t": { "type": "number" },
+                "context_kv_cache": { "type": "boolean" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "jobStatus": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "segmenting",
+        "segments_ready",
+        "waiting_for_tts_service",
+        "audio_generating",
+        "audio_quality_checking",
+        "audio_ready",
+        "subtitle_generating",
+        "subtitle_ready",
+        "image_planning",
+        "images_ready",
+        "waiting_for_video_service",
+        "video_generating",
+        "video_ready",
+        "manual_review_required",
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "nullablePath": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 1024
+        }
+      ]
+    },
+    "nullableSeconds": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number",
+          "minimum": 0
+        }
+      ]
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "subtitle_text",
+        "speech_text",
+        "request_note"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "subtitle_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "speech_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20000
+        },
+        "request_note": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "segment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "order",
+        "subtitle_text",
+        "speech_text",
+        "image_id",
+        "requested_image_duration_seconds",
+        "audio",
+        "timing"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^seg_[0-9]{3,}$"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "subtitle_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "speech_text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "audio_block_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "image_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^image_[0-9]{3,}$"
+            }
+          ]
+        },
+        "requested_image_duration_seconds": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "audio": {
+          "$ref": "#/$defs/segmentAudio"
+        },
+        "timing": {
+          "$ref": "#/$defs/segmentTiming"
+        }
+      }
+    },
+    "segmentAudio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "path",
+        "duration_seconds",
+        "error"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "generating",
+            "generated",
+            "failed"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "duration_seconds": {
+          "$ref": "#/$defs/nullableSeconds"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            }
+          ]
+        }
+      }
+    },
+    "segmentTiming": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_seconds",
+        "end_seconds"
+      ],
+      "properties": {
+        "start_seconds": {
+          "$ref": "#/$defs/nullableSeconds"
+        },
+        "end_seconds": {
+          "$ref": "#/$defs/nullableSeconds"
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "order",
+        "segment_ids",
+        "requested_duration_seconds",
+        "original_filename",
+        "stored_filename",
+        "stored_path",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^image_[0-9]{3,}$"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "upload",
+            "library"
+          ]
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "segment_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^seg_[0-9]{3,}$"
+          }
+        },
+        "requested_duration_seconds": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          ]
+        },
+        "original_filename": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "stored_filename": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$"
+            }
+          ]
+        },
+        "stored_path": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "sha256": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "start_seconds": {
+          "$ref": "#/$defs/nullableSeconds"
+        },
+        "end_seconds": {
+          "$ref": "#/$defs/nullableSeconds"
+        },
+        "duration_seconds": {
+          "$ref": "#/$defs/nullableSeconds"
+        },
+        "library_asset_id": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{7,63}$" }
+          ]
+        }
+      }
+    },
+    "outputOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filename",
+        "aspect_ratio",
+        "subtitle_size",
+        "subtitle_position"
+      ],
+      "properties": {
+        "filename": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,199}\\.mp4$"
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "type": "string",
+          "enum": [
+            "3:2",
+            "16:9",
+            "9:16",
+            "1:1"
+          ]
+        },
+        "subtitle_size": {
+          "type": "integer",
+          "minimum": 12,
+          "maximum": 120
+        },
+        "subtitle_position": {
+          "type": "string",
+          "enum": [
+            "top",
+            "center",
+            "bottom"
+          ]
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "audio_file",
+        "subtitle_file",
+        "video_file"
+      ],
+      "properties": {
+        "audio_file": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "subtitle_file": {
+          "$ref": "#/$defs/nullablePath"
+        },
+        "video_file": {
+          "$ref": "#/$defs/nullablePath"
+        }
+      }
+    },
+    "historyItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "stage",
+        "message"
+      ],
+      "properties": {
+        "at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "stage": {
+          "$ref": "#/$defs/jobStatus"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "reasons"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "code",
+        "message",
+        "retryable",
+        "segment_id"
+      ],
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/jobStatus"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "segment_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^seg_[0-9]{3,}$"
+            }
+          ]
+        },
+        "audio_block_id": {
+          "type": "string",
+          "pattern": "^block_[0-9]{3,}$"
+        }
+      }
+    }
+  }
+}

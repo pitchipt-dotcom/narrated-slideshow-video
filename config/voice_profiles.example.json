@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "calm_female_06": {
+      "model": "irodori-tts",
+      "voice": "sample",
+      "caption": "",
+      "steps": 40,
+      "tempo": 1
+    }
+  }
+}

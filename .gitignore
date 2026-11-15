@@ -1,0 +1,35 @@
+# Real configuration (only *.example files are tracked)
+.env
+*.env
+!*.env.example
+config/voice_profiles.json
+config/pronunciation-dictionary.json
+*.key
+*.pem
+*.token
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Job data and media
+manual_jobs/
+manual_archive/
+run/
+*.wav
+*.mp3
+*.mp4
+*.mov
+*.webm
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.heic
+!frontend/video-mode-entry/icons/*.png
+
+# Logs and temporary files
+*.log
+*.tmp
+*.tmp-*
+*.lock

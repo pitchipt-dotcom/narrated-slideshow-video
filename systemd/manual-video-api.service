@@ -1,0 +1,23 @@
+# Example user unit. Replace /opt/narrated-slideshow-video and /srv/narrated-slideshow
+# with your own install and data directories.
+[Unit]
+Description=Manual Video UI/API
+After=network-online.target tailscaled.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/narrated-slideshow-video
+EnvironmentFile=/opt/narrated-slideshow-video/config/manual-video.env
+ExecStart=/usr/bin/node /opt/narrated-slideshow-video/backend/manual-job-server.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/srv/narrated-slideshow
+UMask=0007
+
+[Install]
+WantedBy=default.target
